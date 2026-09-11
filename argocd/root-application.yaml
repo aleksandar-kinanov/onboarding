@@ -1,0 +1,25 @@
+# App-of-apps root: syncs everything under argocd/apps/ (the child
+# Applications for keycloak, crossplane, and the keycloak provider, plus
+# any raw prerequisite manifests like the Crossplane registry CA bundle)
+# straight from this git repo. This manifest itself is the one thing
+# still applied by hand once, to bootstrap ArgoCD onto its own repo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:aleksandar-kinanov/onboarding.git
+    targetRevision: main
+    path: argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

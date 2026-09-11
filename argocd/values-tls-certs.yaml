@@ -36,3 +36,4 @@ configs:
         m7q2TzMp8s5DuGbK
         -----END CERTIFICATE-----
       charts.crossplane.io: *zscaler_root_ca
+      github.com: *zscaler_root_ca
