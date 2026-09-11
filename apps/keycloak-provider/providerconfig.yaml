@@ -1,0 +1,16 @@
+# The keycloak.crossplane.io CRDs are registered by the Provider once its
+# package finishes installing, so ArgoCD needs to tolerate this resource
+# briefly having no matching CRD on the first sync.
+apiVersion: keycloak.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: keycloak-provider-config
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      name: keycloak-credentials
+      namespace: crossplane-system
+      key: credentials
