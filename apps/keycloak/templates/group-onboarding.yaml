@@ -16,7 +16,8 @@ metadata:
   name: basic-memberships
 spec:
   forProvider:
-    groupId: "onboarding-groupadminpermissions-group"
+    groupIdRef:
+      name: "onboarding-managed-group"
     members:
       - "alice"
     realmIdRef:
