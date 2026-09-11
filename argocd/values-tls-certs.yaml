@@ -2,7 +2,13 @@
 # repo-server can fetch git/Helm chart sources over HTTPS from this network.
 # Add a new hostname key here (same cert value) whenever a new external
 # source host is introduced in a later milestone.
+#
+# kustomize.buildOptions enables Kustomize's Helm chart inflation generator
+# (`helmCharts:` in a kustomization.yaml), used by apps/nginx to render a
+# local Helm chart and then patch/generate on top of it with Kustomize.
 configs:
+  cm:
+    kustomize.buildOptions: --enable-helm
   tls:
     certificates:
       codecentric.github.io: &zscaler_root_ca |

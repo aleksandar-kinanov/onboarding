@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+helmGlobals:
+  chartHome: charts
+
+helmCharts:
+  - name: nginx
+    version: 0.1.0
+    releaseName: nginx
+    valuesFile: charts/nginx/values.yaml
+
+configMapGenerator:
+  - name: nginx-html
+    files:
+      - html/index.html
+
+patches:
+  - path: patches/mount-html.yaml
+    target:
+      kind: Deployment
+      name: nginx
+
+replacements:
+  - source:
+      kind: Service
+      name: nginx
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: Deployment
+          name: nginx
+        fieldPaths:
+          - spec.template.spec.containers.[name=nginx].env.[name=SERVICE_NAME].value
+  - source:
+      kind: Deployment
+      name: nginx
+      fieldPath: spec.template.spec.containers.[name=nginx].ports.[name=http].containerPort
+    targets:
+      - select:
+          kind: Service
+          name: nginx
+        fieldPaths:
+          - spec.ports.[name=http].targetPort
+
+components:
+  - components/resource-limits
