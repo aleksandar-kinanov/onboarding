@@ -9,16 +9,17 @@ spec:
       name: onboarding
   providerConfigRef:
     name: keycloak-provider-config
-# ---
-# apiVersion: group.keycloak.crossplane.io/v1alpha1
-# kind: Memberships
-# metadata:
-#   name: basic-memberships
-# spec:
-#   forProvider:
-#     groupId: "onboarding-managed-group"
-#     members:
-#       - "alice"
-#     realmIdRef: "onboarding"
-#   providerConfigRef:
-#     name: "keycloak-provider-config"
+---
+apiVersion: group.keycloak.crossplane.io/v1alpha1
+kind: Memberships
+metadata:
+  name: basic-memberships
+spec:
+  forProvider:
+    groupId: "onboarding-managed-group"
+    members:
+      - "alice"
+    realmIdRef:
+      name: "onboarding"
+  providerConfigRef:
+    name: "keycloak-provider-config"
