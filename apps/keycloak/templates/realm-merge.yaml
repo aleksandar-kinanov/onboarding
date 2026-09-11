@@ -1,0 +1,11 @@
+apiVersion: realm.keycloak.crossplane.io/v1alpha1
+kind: Realm
+metadata:
+  name: merge
+spec:
+  forProvider:
+    realm: merge
+    enabled: true
+    displayName: "Realm to merge"
+  providerConfigRef:
+    name: keycloak-provider-config

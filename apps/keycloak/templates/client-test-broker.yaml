@@ -1,0 +1,22 @@
+apiVersion: openidclient.keycloak.crossplane.io/v1alpha2
+kind: Client
+metadata:
+  name: onboarding-test-broker
+spec:
+  forProvider:
+    realmIdRef:
+      name: onboarding
+    clientId: test
+    name: Test Realm Broker
+    enabled: true
+    accessType: CONFIDENTIAL
+    standardFlowEnabled: true
+    clientAuthenticatorType: client-secret
+    clientSecretSecretRef:
+      name: onboarding-client-secrets
+      namespace: keycloak
+      key: test-broker
+    validRedirectUris:
+      - "http://localhost:8080/auth/realms/test/broker/keycloak-oidc/endpoint"
+  providerConfigRef:
+    name: keycloak-provider-config
