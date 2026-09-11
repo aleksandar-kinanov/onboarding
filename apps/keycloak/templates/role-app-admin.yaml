@@ -1,0 +1,12 @@
+apiVersion: role.keycloak.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: onboarding-app-admin
+spec:
+  forProvider:
+    name: app-admin
+    description: Full administrative access to the onboarding demo app
+    realmIdRef:
+      name: onboarding
+  providerConfigRef:
+    name: keycloak-provider-config

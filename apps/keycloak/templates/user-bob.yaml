@@ -1,0 +1,37 @@
+apiVersion: user.keycloak.crossplane.io/v1alpha1
+kind: User
+metadata:
+  name: onboarding-bob
+spec:
+  forProvider:
+    realmIdRef:
+      name: onboarding
+    username: bob
+    email: bob@example.com
+    emailVerified: true
+    enabled: true
+    firstName: Bob
+    lastName: Example
+    initialPassword:
+      - temporary: false
+        valueSecretRef:
+          name: onboarding-user-passwords
+          namespace: keycloak
+          key: bob
+  providerConfigRef:
+    name: keycloak-provider-config
+---
+apiVersion: user.keycloak.crossplane.io/v1alpha1
+kind: Roles
+metadata:
+  name: onboarding-bob-roles
+spec:
+  forProvider:
+    realmIdRef:
+      name: onboarding
+    userIdRef:
+      name: onboarding-bob
+    roleIdsRefs:
+      - name: onboarding-app-user
+  providerConfigRef:
+    name: keycloak-provider-config

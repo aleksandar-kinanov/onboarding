@@ -1,0 +1,12 @@
+apiVersion: role.keycloak.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: onboarding-app-user
+spec:
+  forProvider:
+    name: app-user
+    description: Standard user access to the onboarding demo app
+    realmIdRef:
+      name: onboarding
+  providerConfigRef:
+    name: keycloak-provider-config
