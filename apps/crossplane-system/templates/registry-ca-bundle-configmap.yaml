@@ -1,12 +1,11 @@
 # Corporate TLS-inspecting proxy (Zscaler) root CA, trusted so Crossplane's
 # core pod can fetch provider/function/configuration packages (OCI images)
-# from registries over HTTPS on this network. Referenced by
-# argocd/apps/crossplane-application.yaml via registryCaBundleConfig.
+# from registries over HTTPS on this network. Referenced via values.yaml's
+# registryCaBundleConfig.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: zscaler-root-ca
-  namespace: crossplane-system
 data:
   ca-bundle.crt: |
     -----BEGIN CERTIFICATE-----

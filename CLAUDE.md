@@ -35,18 +35,35 @@ working examples over hardening.
 
 ## Repo structure
 
-Not yet created — expect roughly:
-
 ```
-kind/                 kind cluster config
-argocd/                ArgoCD install manifests + Application(Set) defs
-apps/keycloak/          Keycloak Helm values / Application manifest
-apps/crossplane/        Crossplane install + ProviderConfig
-apps/keycloak-provider/ Crossplane Keycloak provider config
-realms/                 Crossplane claims/XRs for realms, clients, users
+kind/                        kind cluster config
+argocd/applicationset.yaml   ApplicationSet (git directory generator): one
+                              Application per apps/* folder, folder name
+                              used as both Application name and namespace.
+                              The one manifest still applied by hand once.
+argocd/values-tls-certs.yaml Helm values for ArgoCD's own install (repo-server
+                              CA trust for this network's TLS-inspecting
+                              proxy) — applied via `helm upgrade`, not synced
+                              by ArgoCD, since ArgoCD can't bootstrap itself.
+apps/keycloak/                Umbrella Helm chart: depends on codecentric's
+                              keycloakx chart, plus local templates/ for the
+                              Crossplane Provider, ProviderConfig, provider
+                              credentials Secret, and Realm/Client/User claims.
+                              Everything keycloak-related lives here, in the
+                              `keycloak` namespace.
+apps/crossplane-system/       Umbrella Helm chart: depends on the crossplane
+                              chart, plus a local template for the registry
+                              CA bundle ConfigMap. Namespace `crossplane-system`.
 ```
 
-Update this section once the actual layout exists.
+Each `apps/*` folder is a self-contained Helm chart (`Chart.yaml` + `values.yaml`
++ `templates/`) that mixes an external chart dependency with our own local
+manifests. `helm dependency build`/`Chart.lock`/`charts/` are gitignored —
+ArgoCD's repo-server resolves the dependency itself at sync time.
+
+Adding a new app = add a new `apps/<name>/` folder with a `Chart.yaml`; the
+ApplicationSet picks it up automatically and deploys it into a `<name>`
+namespace, no new Application manifest needed.
 
 ## Common commands
 

@@ -1,0 +1,11 @@
+apiVersion: realm.keycloak.crossplane.io/v1alpha1
+kind: Realm
+metadata:
+  name: onboarding
+spec:
+  forProvider:
+    realm: onboarding
+    enabled: true
+    displayName: "Onboarding Realm"
+  providerConfigRef:
+    name: keycloak-provider-config

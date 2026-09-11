@@ -1,0 +1,34 @@
+# Generates one Application per top-level folder under apps/, using the
+# folder name as both the Application name and the destination namespace.
+# This is the one manifest still applied by hand once, to bootstrap ArgoCD
+# onto its own repo.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: git@github.com:aleksandar-kinanov/onboarding.git
+        revision: main
+        directories:
+          - path: apps/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: git@github.com:aleksandar-kinanov/onboarding.git
+        targetRevision: main
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,10 @@
+keycloakx:
+  replicas: 1
+  args:
+    - start-dev
+  # Placeholder/test credentials for this local sandbox only.
+  extraEnv: |
+    - name: KC_BOOTSTRAP_ADMIN_USERNAME
+      value: admin
+    - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+      value: admin

@@ -12,5 +12,5 @@ spec:
     source: Secret
     secretRef:
       name: keycloak-credentials
-      namespace: crossplane-system
+      namespace: keycloak
       key: credentials

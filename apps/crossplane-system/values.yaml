@@ -1,0 +1,4 @@
+crossplane:
+  registryCaBundleConfig:
+    name: zscaler-root-ca
+    key: ca-bundle.crt

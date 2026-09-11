@@ -1,0 +1,8 @@
+apiVersion: v2
+name: keycloak
+description: Keycloak deployment, its Crossplane provider wiring, and realm/client/user claims
+version: 0.1.0
+dependencies:
+  - name: keycloakx
+    version: 7.3.1
+    repository: https://codecentric.github.io/helm-charts
