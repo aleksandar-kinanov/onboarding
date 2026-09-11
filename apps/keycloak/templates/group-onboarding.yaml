@@ -1,0 +1,21 @@
+apiVersion: group.keycloak.crossplane.io/v1alpha1
+kind: Group
+metadata:
+  name: onboarding-groupadminpermissions-group
+spec:
+  forProvider:
+    name: onboarding-managed-group
+    realmIdRef: onboarding
+  providerConfigRef:
+    name: keycloak-provider-config
+---
+apiVersion: group.keycloak.crossplane.io/v1alpha1
+kind: Memberships
+metadata:
+  name: basic-memberships
+spec:
+  forProvider:
+    groupId: "onboarding-managed-group"
+    members:
+      - "alice"
+    realmId: "onboarding"
