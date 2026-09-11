@@ -19,3 +19,5 @@ spec:
     members:
       - "alice"
     realmId: "onboarding"
+  providerConfigRef:
+    name: "keycloak-provider-config"
