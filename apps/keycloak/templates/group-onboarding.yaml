@@ -17,7 +17,7 @@ metadata:
 spec:
   forProvider:
     groupIdRef:
-      name: "onboarding-groupadminpermissions-group
+      name: "onboarding-groupadminpermissions-group"
     members:
       - "alice"
     realmIdRef:
