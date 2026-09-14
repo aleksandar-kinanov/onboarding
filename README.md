@@ -10,12 +10,11 @@ provider), and Strimzi Kafka, all driven declaratively from this repo.
 - An SSH keypair whose **public** half is added as a read-only **Deploy key**
   on this GitHub repo (`aleksandar-kinanov/onboarding`). Defaults to
   `~/.ssh/id_ed25519`; override with `SSH_KEY_PATH`.
-- The sibling `python-kafka-test` repo checked out locally (default
-  `~/projects/python-kafka-test`; override with `PYTHON_KAFKA_TEST_DIR`).
 
 ## Quick start
 
 ```bash
+git clone git@github.com:aleksandar-kinanov/onboarding.git && cd onboarding
 ./setup.sh up          # kind cluster -> ArgoCD -> GitHub connection -> root Application
 ./setup.sh endpoints    # print every app's URL/credentials and port-forward command
 ./setup.sh down         # deletes the kind cluster (everything in it goes with it)
@@ -55,8 +54,8 @@ Apps:
 - `apps/crossplane-system/` — Crossplane core install.
 - `apps/strimzi/` — Strimzi Kafka Operator, a KRaft `Kafka`/`KafkaNodePool`,
   and a demo `KafkaTopic`/`KafkaUser`.
-- `apps/python-kafka-test/` — a small Python producer/consumer app (image
-  built from the sibling `python-kafka-test` repo, loaded into `kind`, not
+- `apps/python-kafka-test/` — a small Python producer/consumer app
+  (`app/`: source + Dockerfile, built and `kind load`ed by `setup.sh`, not
   pulled from a registry) with its own `KafkaTopic`/`KafkaUser`, wired into
   the Pod's env via Kustomize.
 - `apps/coraza-haproxy/` — HAProxy + Coraza SPOA WAF demo.

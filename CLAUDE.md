@@ -92,11 +92,12 @@ Apps:
   `quay.io`), a KRaft `Kafka`/`KafkaNodePool`, and a demo
   `KafkaTopic`/`KafkaUser`.
 - `apps/python-kafka-test/` — Kustomize (no Helm): a `Deployment` running
-  an image built from the sibling `~/projects/python-kafka-test` repo and
-  `kind load`ed (not pulled from a registry), plus its own
-  `KafkaTopic`/`KafkaUser` and a `ConfigMap` wired into the Pod's env via
-  `envFrom` + Kustomize `replacements` (so the topic/username come from the
-  `KafkaTopic`/`KafkaUser` resource names, not duplicated literals).
+  an image built from `app/` (source + Dockerfile, in this same folder)
+  and `kind load`ed by `setup.sh` (not pulled from a registry), plus its
+  own `KafkaTopic`/`KafkaUser` and a `ConfigMap` wired into the Pod's env
+  via `envFrom` + Kustomize `replacements` (so the topic/username come
+  from the `KafkaTopic`/`KafkaUser` resource names, not duplicated
+  literals). `app/` is picked up by `setup.sh`, not by Kustomize/ArgoCD.
 - `apps/coraza-haproxy/` — HAProxy + Coraza SPOA WAF demo.
 - `apps/monitoring/`, `apps/alloy/` — Grafana + Loki, fed by Alloy shipping
   `coraza-haproxy`'s logs.

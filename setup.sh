@@ -17,7 +17,7 @@ ARGOCD_NAMESPACE="argocd"
 GIT_REPO_URL="git@github.com:aleksandar-kinanov/onboarding.git"
 SSH_KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_KAFKA_TEST_DIR="${PYTHON_KAFKA_TEST_DIR:-$HOME/projects/python-kafka-test}"
+PYTHON_KAFKA_TEST_DIR="$SCRIPT_DIR/apps/python-kafka-test/app"
 PYTHON_KAFKA_TEST_IMAGE="ghcr.io/aleksandar-kinanov/onboarding/python-kafka-test:latest"
 
 usage() {
@@ -55,12 +55,8 @@ up() {
   # ghcr.io), so it must exist locally before ArgoCD schedules its Pod, or
   # the Deployment's imagePullPolicy: IfNotPresent will try (and fail) to
   # pull it from the registry instead.
-  if [[ -d "$PYTHON_KAFKA_TEST_DIR" ]]; then
-    docker build -t "$PYTHON_KAFKA_TEST_IMAGE" "$PYTHON_KAFKA_TEST_DIR"
-    kind load docker-image "$PYTHON_KAFKA_TEST_IMAGE" --name "$CLUSTER_NAME"
-  else
-    echo "  $PYTHON_KAFKA_TEST_DIR not found, skipping (set PYTHON_KAFKA_TEST_DIR to override)" >&2
-  fi
+  docker build -t "$PYTHON_KAFKA_TEST_IMAGE" "$PYTHON_KAFKA_TEST_DIR"
+  kind load docker-image "$PYTHON_KAFKA_TEST_IMAGE" --name "$CLUSTER_NAME"
 
   echo "==> Adding/updating the argo-helm repo"
   helm repo add argo https://argoproj.github.io/argo-helm >/dev/null
