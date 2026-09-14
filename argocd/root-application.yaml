@@ -1,0 +1,29 @@
+# Bootstraps ArgoCD onto its own repo. This is the one resource still
+# applied by hand (setup.sh does it once, non-interactively) — after that,
+# this Application manages this same argocd/ folder, including itself, so
+# any future change to applicationset.yaml or this file is picked up by
+# ArgoCD's normal git sync. No more manual kubectl apply needed.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:aleksandar-kinanov/onboarding.git
+    targetRevision: main
+    path: argocd
+    directory:
+      # values-tls-certs.yaml is Helm values for ArgoCD's own install, applied
+      # via `helm upgrade` — not a k8s manifest, so it must stay out of sync.
+      exclude: values-tls-certs.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,7 +1,7 @@
 # Generates one Application per top-level folder under apps/, using the
 # folder name as both the Application name and the destination namespace.
-# This is the one manifest still applied by hand once, to bootstrap ArgoCD
-# onto its own repo.
+# Managed by argocd/root-application.yaml, so this file itself never needs
+# to be applied by hand.
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
