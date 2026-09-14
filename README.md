@@ -1,12 +1,16 @@
 # argocd-onboarding
 
-Local, throwaway `kind` sandbox for learning GitOps-managed identity and
-platform tooling. ArgoCD deploys everything else, all driven declaratively
-from this repo:
+Local, throwaway `kind` sandbox for learning GitOps-managed platform
+tooling. ArgoCD deploys everything below, all driven declaratively from
+this repo (see "Apps" further down for the full detail on each):
 
-- Keycloak
-- Crossplane (+ its Keycloak provider)
-- Strimzi Kafka
+- Crossplane, its Keycloak provider, and Keycloak itself (realm/client/
+  user/role/group claims, plus a custom `KeycloakUser` XRD/Composition)
+- Strimzi Kafka, and a Python producer/consumer app running against it
+- HAProxy + Coraza SPOA WAF demo, fronting `httpbin`
+- Grafana + Loki, fed by Alloy shipping the WAF demo's logs
+- nginx, exercising Kustomize's Helm chart inflation, patches,
+  `replacements`, and a component together
 
 ## Prerequisites
 
