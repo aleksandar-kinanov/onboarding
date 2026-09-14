@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-kafka-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-kafka-test
+  template:
+    metadata:
+      labels:
+        app: python-kafka-test
+    spec:
+      containers:
+        - name: python-kafka-test
+          image: ghcr.io/aleksandar-kinanov/onboarding/python-kafka-test:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: python-kafka-test-config
+                  key: KAFKA_HOST
+            - name: KAFKA_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: python-kafka-test-config
+                  key: KAFKA_TOPIC
+            - name: KAFKA_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: python-kafka-test-config
+                  key: KAFKA_USERNAME
+            - name: KAFKA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: python-kafka-test-user
+                  key: password

@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Co-located with the Kafka cluster and Entity Operator (both live in the
+# strimzi namespace) so the KafkaUser's generated credentials Secret can be
+# mounted directly into this app's Pod without cross-namespace copying.
+namespace: strimzi
+
+resources:
+  - configmap.yaml
+  - kafkatopic.yaml
+  - kafkauser.yaml
+  - deployment.yaml

@@ -34,11 +34,6 @@ spec:
         tls: false
         authentication:
           type: scram-sha-512
-        configuration:
-          brokers:
-            - broker: 0
-              advertisedHost: localhost
-              advertisedPort: 9092
       - name: tls
         port: 9093
         type: internal
