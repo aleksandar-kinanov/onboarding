@@ -43,3 +43,4 @@ configs:
         -----END CERTIFICATE-----
       charts.crossplane.io: *zscaler_root_ca
       github.com: *zscaler_root_ca
+      grafana-community.github.io: *zscaler_root_ca
