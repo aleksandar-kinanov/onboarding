@@ -62,6 +62,8 @@ Apps:
   - Keycloak (codecentric keycloakx chart)
   - Crossplane Keycloak provider
   - Realm/client/user/role/group claims
+  - Example custom `KeycloakUser` XRD + Composition (Crossplane
+    composite resource), abstracting over the raw User/Roles claims
 - `apps/crossplane-system/`
   - Crossplane core install
 - `apps/strimzi/`
@@ -77,12 +79,15 @@ Apps:
   - HAProxy + Coraza SPOA WAF demo
   - `httpbin` backend behind it
 - `apps/monitoring/`
-  - Grafana
-  - Loki
+  - Grafana, with a Loki datasource and a dashboard auto-provisioned
+    from a ConfigMap (no manual UI import)
+  - Loki, single-tenant, storing `coraza-haproxy`'s logs
 - `apps/alloy/`
   - Alloy, shipping `coraza-haproxy`'s logs into Loki
 - `apps/nginx/`
-  - Helm chart base extended via Kustomize, demo backend
+  - Demo backend exercising Kustomize fully: Helm chart inflation
+    (`helmCharts:`), a `configMapGenerator`, patches, `replacements`,
+    and a component
 
 ## Conventions
 
