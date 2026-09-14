@@ -11,3 +11,28 @@ resources:
   - kafkatopic.yaml
   - kafkauser.yaml
   - deployment.yaml
+
+# KafkaTopic/KafkaUser metadata.name is the single source of truth for the
+# topic/username the app connects with; propagate it into the ConfigMap
+# instead of duplicating the literal string.
+replacements:
+  - source:
+      kind: KafkaTopic
+      name: python-kafka-test
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: ConfigMap
+          name: python-kafka-test-config
+        fieldPaths:
+          - data.KAFKA_TOPIC
+  - source:
+      kind: KafkaUser
+      name: python-kafka-test-user
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: ConfigMap
+          name: python-kafka-test-config
+        fieldPaths:
+          - data.KAFKA_USERNAME

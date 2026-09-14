@@ -16,22 +16,13 @@ spec:
         - name: python-kafka-test
           image: ghcr.io/aleksandar-kinanov/onboarding/python-kafka-test:latest
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: python-kafka-test-config
           env:
-            - name: KAFKA_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: python-kafka-test-config
-                  key: KAFKA_HOST
-            - name: KAFKA_TOPIC
-              valueFrom:
-                configMapKeyRef:
-                  name: python-kafka-test-config
-                  key: KAFKA_TOPIC
-            - name: KAFKA_USERNAME
-              valueFrom:
-                configMapKeyRef:
-                  name: python-kafka-test-config
-                  key: KAFKA_USERNAME
+            # Strimzi's generated Secret uses a bare "password" key (not
+            # KAFKA_PASSWORD), so it can't be bulk-imported via envFrom
+            # without breaking main.py's expected env var name.
             - name: KAFKA_PASSWORD
               valueFrom:
                 secretKeyRef:
