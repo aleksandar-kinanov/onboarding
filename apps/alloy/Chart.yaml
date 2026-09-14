@@ -1,0 +1,8 @@
+apiVersion: v2
+name: alloy
+description: Deploys Grafana Alloy to ship coraza/haproxy logs into Loki with parsed fields for LogQL metrics
+version: 0.1.0
+dependencies:
+  - name: alloy
+    version: 1.12.1
+    repository: https://grafana.github.io/helm-charts

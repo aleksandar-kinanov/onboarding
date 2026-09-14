@@ -1,0 +1,83 @@
+alloy:
+  alloy:
+    configMap:
+      create: true
+      content: |
+        // Discover every pod in the cluster, then keep only the haproxy
+        // container of the coraza-haproxy app (namespace "coraza-haproxy",
+        // folder-name-as-namespace convention from the ApplicationSet).
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "coraza_haproxy" {
+          targets = discovery.kubernetes.pods.targets
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            regex         = "coraza-haproxy"
+            action        = "keep"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            regex         = "haproxy"
+            action        = "keep"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+        }
+
+        // Tail the haproxy container logs straight from the Kubernetes API
+        // (no host mounts needed).
+        loki.source.kubernetes "coraza_haproxy" {
+          targets    = discovery.relabel.coraza_haproxy.output
+          forward_to = [loki.process.haproxy.receiver]
+        }
+
+        // Parse HAProxy's default "httplog" line and attach the parsed
+        // fields as Loki structured metadata (not indexed labels, so
+        // cardinality stays low) - this is what turns the raw log lines
+        // into something LogQL can aggregate as metrics, e.g.:
+        //   sum by (status_code) (count_over_time({namespace="coraza-haproxy"} | status_code != "" [5m]))
+        loki.process "haproxy" {
+          forward_to = [loki.write.default.receiver]
+
+          stage.regex {
+            expression = `^(?P<client_ip>[\d\.]+):(?P<client_port>\d+) \[(?P<timestamp>[^\]]+)\] (?P<frontend>\S+) (?P<backend>\S+)/(?P<server>\S+) (?P<tq>[\-\d]+)/(?P<tw>[\-\d]+)/(?P<tc>[\-\d]+)/(?P<tr>[\-\d]+)/(?P<tt>[\-\d]+) (?P<status_code>\d{3}) (?P<bytes_read>\d+) \S+ \S+ (?P<term_state>\S+) \S+ \S+ "(?P<method>\S+) (?P<path>\S+) [^"]+"`
+          }
+
+          stage.structured_metadata {
+            values = {
+              status_code = "",
+              method      = "",
+              path        = "",
+              backend     = "",
+              term_state  = "",
+              tt          = "",
+            }
+          }
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "http://monitoring-loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+          }
+        }
+
+  mounts:
+    varlog: false
+    dockercontainers: false

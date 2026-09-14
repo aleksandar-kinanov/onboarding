@@ -1,3 +1,17 @@
+grafana:
+  adminUser: admin
+  adminPassword: admin  # local sandbox placeholder, not a real credential
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://monitoring-loki-gateway.monitoring.svc.cluster.local
+          isDefault: true
+
 loki:
   loki:
     commonConfig:
