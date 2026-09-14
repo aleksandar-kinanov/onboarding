@@ -1,0 +1,11 @@
+apiVersion: v2
+name: monitoring-system
+description: Deploys Grafana and Loki
+version: 0.1.0
+dependencies:
+  - name: grafana/grafana
+    version: 10.5.15
+    repository: https://charts.crossplane.io/stable
+  - name: grafana/loki
+    version: 7.3.0
+    repository: https://grafana-community.github.io/helm-charts
