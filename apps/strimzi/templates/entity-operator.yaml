@@ -3,7 +3,6 @@ kind: Kafka
 metadata:
   name: my-cluster
 spec:
-  #...
   entityOperator:
     topicOperator: {}
     userOperator: {}
