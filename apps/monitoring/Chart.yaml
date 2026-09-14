@@ -3,7 +3,7 @@ name: monitoring-system
 description: Deploys Grafana and Loki
 version: 0.1.0
 dependencies:
-  - name: grafana-community/grafana
+  - name: grafana/grafana
     version: 10.5.15
     repository: https://grafana.github.io/helm-charts
   - name: grafana-community/loki
