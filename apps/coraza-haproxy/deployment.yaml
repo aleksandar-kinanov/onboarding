@@ -23,6 +23,8 @@ spec:
               mountPath: /usr/local/etc/haproxy
         - name: coraza-spoa
           image: ghcr.io/corazawaf/coraza-spoa:0.7.3
+          command:
+            - /coraza-spoa
           args:
             - -config
             - /etc/coraza-spoa/coraza-spoa.yaml
