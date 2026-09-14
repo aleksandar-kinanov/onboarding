@@ -1,8 +1,12 @@
 # argocd-onboarding
 
 Local, throwaway `kind` sandbox for learning GitOps-managed identity and
-platform tooling: ArgoCD deploying Keycloak, Crossplane (+ its Keycloak
-provider), and Strimzi Kafka, all driven declaratively from this repo.
+platform tooling. ArgoCD deploys everything else, all driven declaratively
+from this repo:
+
+- Keycloak
+- Crossplane (+ its Keycloak provider)
+- Strimzi Kafka
 
 ## Prerequisites
 
@@ -20,13 +24,18 @@ git clone git@github.com:aleksandar-kinanov/onboarding.git && cd onboarding
 ./setup.sh down         # deletes the kind cluster (everything in it goes with it)
 ```
 
-`up` is the only time anything is applied by hand: it creates the `kind`
-cluster, builds and `kind load`s the `python-kafka-test` image, installs
-ArgoCD, wires up the GitHub repo credentials, and applies
-`argocd/root-application.yaml` once. From there, ArgoCD owns the rest — the
-root Application manages `argocd/applicationset.yaml`, which creates one
-Application per `apps/*` folder. Any future change anywhere in the repo is
-picked up by ArgoCD's normal sync, no more manual `kubectl`/`helm`.
+`up` is the only time anything is applied by hand:
+
+- Creates the `kind` cluster
+- Builds and `kind load`s the `python-kafka-test` image
+- Installs ArgoCD
+- Wires up the GitHub repo credentials
+- Applies `argocd/root-application.yaml` once
+
+From there, ArgoCD owns the rest — the root Application manages
+`argocd/applicationset.yaml`, which creates one Application per `apps/*`
+folder. Any future change anywhere in the repo is picked up by ArgoCD's
+normal sync, no more manual `kubectl`/`helm`.
 
 Every app is ClusterIP-only, so `endpoints` is the way in — it prints the
 `kubectl port-forward` command, local URL, and login for each one.
