@@ -1,0 +1,9 @@
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: my-cluster
+spec:
+  #...
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
