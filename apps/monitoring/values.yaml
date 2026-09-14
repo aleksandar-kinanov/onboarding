@@ -14,6 +14,7 @@ grafana:
 
 loki:
   loki:
+    auth_enabled: false  # single-tenant local sandbox, no X-Scope-OrgID needed
     commonConfig:
       replication_factor: 1
     schemaConfig:
