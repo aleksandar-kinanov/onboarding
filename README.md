@@ -49,19 +49,31 @@ apps/<name>/                  One self-contained app per folder (Helm chart or
 
 Apps:
 
-- `apps/keycloak/` — Keycloak (codecentric keycloakx chart) + Crossplane
-  Keycloak provider + realm/client/user/role/group claims.
-- `apps/crossplane-system/` — Crossplane core install.
-- `apps/strimzi/` — Strimzi Kafka Operator, a KRaft `Kafka`/`KafkaNodePool`,
-  and a demo `KafkaTopic`/`KafkaUser`.
-- `apps/python-kafka-test/` — a small Python producer/consumer app
-  (`app/`: source + Dockerfile, built and `kind load`ed by `setup.sh`, not
-  pulled from a registry) with its own `KafkaTopic`/`KafkaUser`, wired into
-  the Pod's env via Kustomize.
-- `apps/coraza-haproxy/` — HAProxy + Coraza SPOA WAF demo.
-- `apps/monitoring/`, `apps/alloy/` — Grafana + Loki, fed by Alloy shipping
-  `coraza-haproxy`'s logs.
-- `apps/nginx/` — Helm chart base extended via Kustomize, demo backend.
+- `apps/keycloak/`
+  - Keycloak (codecentric keycloakx chart)
+  - Crossplane Keycloak provider
+  - Realm/client/user/role/group claims
+- `apps/crossplane-system/`
+  - Crossplane core install
+- `apps/strimzi/`
+  - Strimzi Kafka Operator
+  - A KRaft `Kafka`/`KafkaNodePool`
+  - A demo `KafkaTopic`/`KafkaUser`
+- `apps/python-kafka-test/`
+  - Small Python producer/consumer app (`app/`: source + Dockerfile,
+    built and `kind load`ed by `setup.sh`, not pulled from a registry)
+  - Its own `KafkaTopic`/`KafkaUser`
+  - A `ConfigMap` wiring both into the Pod's env via Kustomize
+- `apps/coraza-haproxy/`
+  - HAProxy + Coraza SPOA WAF demo
+  - `httpbin` backend behind it
+- `apps/monitoring/`
+  - Grafana
+  - Loki
+- `apps/alloy/`
+  - Alloy, shipping `coraza-haproxy`'s logs into Loki
+- `apps/nginx/`
+  - Helm chart base extended via Kustomize, demo backend
 
 ## Conventions
 
