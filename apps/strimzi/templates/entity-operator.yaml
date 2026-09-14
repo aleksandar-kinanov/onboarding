@@ -17,7 +17,6 @@ spec:
         size: 100Gi
         kraftMetadata: shared
 ---
-
 apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
@@ -35,6 +34,8 @@ spec:
         port: 9093
         type: internal
         tls: true
+        authentication:
+          type: scram-sha-512
     config:
       offsets.topic.replication.factor: 1
       transaction.state.log.replication.factor: 1
