@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Brings up or tears down the entire local onboarding sandbox:
+#   up   - kind cluster -> ArgoCD (with the Zscaler CA trust) -> GitHub repo
+#          connection -> root Application (which takes over from here).
+#   down - deletes the kind cluster (everything in it goes with it).
+#
+# After `up`, ArgoCD owns the rest: the root Application manages
+# argocd/applicationset.yaml, which in turn creates one Application per
+# apps/* folder. No further manual kubectl/helm steps are needed.
+set -euo pipefail
+
+CLUSTER_NAME="onboarding"
+ARGOCD_NAMESPACE="argocd"
+GIT_REPO_URL="git@github.com:aleksandar-kinanov/onboarding.git"
+SSH_KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON_KAFKA_TEST_DIR="${PYTHON_KAFKA_TEST_DIR:-$HOME/projects/python-kafka-test}"
+PYTHON_KAFKA_TEST_IMAGE="ghcr.io/aleksandar-kinanov/onboarding/python-kafka-test:latest"
+
+usage() {
+  echo "Usage: $0 {up|down}" >&2
+  exit 1
+}
+
+require_cmd() {
+  command -v "$1" >/dev/null 2>&1 || { echo "Missing required command: $1" >&2; exit 1; }
+}
+
+up() {
+  for cmd in kind kubectl helm docker yq; do require_cmd "$cmd"; done
+
+  echo "==> Creating kind cluster '$CLUSTER_NAME'"
+  kind create cluster --name "$CLUSTER_NAME" --config "$SCRIPT_DIR/kind/config.yaml"
+
+  echo "==> Trusting the Zscaler root CA on kind nodes (containerd image pulls)"
+  # kind nodes run their own containerd with its own OS trust store, separate
+  # from the host Docker daemon, so this network's TLS-inspecting proxy needs
+  # to be trusted there too or image pulls fail with x509 errors. Reuses the
+  # same cert already in argocd/values-tls-certs.yaml as the single source.
+  local ca_cert_tmp
+  ca_cert_tmp="$(mktemp)"
+  yq '.configs.tls.certificates."codecentric.github.io"' "$SCRIPT_DIR/argocd/values-tls-certs.yaml" > "$ca_cert_tmp"
+  for node in $(kind get nodes --name "$CLUSTER_NAME"); do
+    docker cp "$ca_cert_tmp" "$node:/usr/local/share/ca-certificates/zscaler-root-ca.crt"
+    docker exec "$node" update-ca-certificates
+    docker exec "$node" systemctl restart containerd
+  done
+  rm -f "$ca_cert_tmp"
+
+  echo "==> Building the python-kafka-test image and loading it into kind"
+  # This image is loaded straight into kind's containerd (not pulled from
+  # ghcr.io), so it must exist locally before ArgoCD schedules its Pod, or
+  # the Deployment's imagePullPolicy: IfNotPresent will try (and fail) to
+  # pull it from the registry instead.
+  if [[ -d "$PYTHON_KAFKA_TEST_DIR" ]]; then
+    docker build -t "$PYTHON_KAFKA_TEST_IMAGE" "$PYTHON_KAFKA_TEST_DIR"
+    kind load docker-image "$PYTHON_KAFKA_TEST_IMAGE" --name "$CLUSTER_NAME"
+  else
+    echo "  $PYTHON_KAFKA_TEST_DIR not found, skipping (set PYTHON_KAFKA_TEST_DIR to override)" >&2
+  fi
+
+  echo "==> Adding/updating the argo-helm repo"
+  helm repo add argo https://argoproj.github.io/argo-helm >/dev/null
+  helm repo update argo >/dev/null
+
+  echo "==> Installing ArgoCD (Zscaler root CA trust from argocd/values-tls-certs.yaml)"
+  kubectl create namespace "$ARGOCD_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+  helm upgrade --install argocd argo/argo-cd \
+    -n "$ARGOCD_NAMESPACE" \
+    -f "$SCRIPT_DIR/argocd/values-tls-certs.yaml" \
+    --wait --timeout 5m
+
+  echo "==> Waiting for ArgoCD server to be ready"
+  kubectl -n "$ARGOCD_NAMESPACE" rollout status deploy/argocd-server --timeout=180s
+
+  echo "==> Configuring the GitHub repo connection (SSH deploy key)"
+  if [[ ! -f "$SSH_KEY_PATH" ]]; then
+    echo "No SSH private key found at $SSH_KEY_PATH." >&2
+    echo "Generate one (ssh-keygen -t ed25519 -f $SSH_KEY_PATH) and add its" >&2
+    echo ".pub half as a read-only Deploy key on the GitHub repo, then re-run." >&2
+    exit 1
+  fi
+  kubectl create secret generic repo-onboarding -n "$ARGOCD_NAMESPACE" \
+    --from-literal=type=git \
+    --from-literal=url="$GIT_REPO_URL" \
+    --from-literal=name=onboarding \
+    --from-literal=project=default \
+    --from-file=sshPrivateKey="$SSH_KEY_PATH" \
+    --dry-run=client -o yaml \
+    | kubectl label -f - --local -o yaml argocd.argoproj.io/secret-type=repository \
+    | kubectl apply -f -
+
+  echo "==> Bootstrapping the root Application (manages everything else from here)"
+  kubectl apply -f "$SCRIPT_DIR/argocd/root-application.yaml"
+
+  echo
+  echo "==> Done. ArgoCD admin password:"
+  kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
+    -o jsonpath='{.data.password}' | base64 -d
+  echo
+  echo "Port-forward the UI with:"
+  echo "  kubectl -n $ARGOCD_NAMESPACE port-forward svc/argocd-server 8443:443"
+}
+
+down() {
+  echo "==> Deleting kind cluster '$CLUSTER_NAME'"
+  kind delete cluster --name "$CLUSTER_NAME"
+}
+
+case "${1:-}" in
+  up) up ;;
+  down) down ;;
+  *) usage ;;
+esac

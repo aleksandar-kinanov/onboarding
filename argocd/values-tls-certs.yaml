@@ -46,3 +46,38 @@ configs:
       grafana-community.github.io: *zscaler_root_ca
       grafana.github.io: *zscaler_root_ca
       quay.io: *zscaler_root_ca
+
+# The certificates above only cover ArgoCD's own git/Helm-index HTTP client.
+# OCI Helm charts (e.g. apps/strimzi's oci://quay.io dependency) are resolved
+# by `helm dependency build` shelling out to the Helm SDK's registry client,
+# which trusts the container's OS certificate bundle instead — so the same
+# root CA also needs adding there. This initContainer reuses the repo-server
+# image itself (already pulled, no extra image fetch) purely to `cat` the
+# proxy's CA onto the end of its own default bundle, then overlays the
+# result onto /etc/ssl/certs/ca-certificates.crt in the main container.
+# Bump the image tag here if the argo-cd chart's appVersion is ever bumped.
+repoServer:
+  volumes:
+    - name: extra-ca-certs
+      configMap:
+        name: argocd-tls-certs-cm
+    - name: ca-bundle
+      emptyDir: {}
+  initContainers:
+    - name: trust-extra-ca
+      image: quay.io/argoproj/argocd:v3.5.3
+      command:
+        - sh
+        - -c
+        - |
+          cat /etc/ssl/certs/ca-certificates.crt /extra-ca-certs/quay.io > /ca-bundle/ca-certificates.crt
+          chmod 0644 /ca-bundle/ca-certificates.crt
+      volumeMounts:
+        - name: extra-ca-certs
+          mountPath: /extra-ca-certs
+        - name: ca-bundle
+          mountPath: /ca-bundle
+  volumeMounts:
+    - name: ca-bundle
+      mountPath: /etc/ssl/certs/ca-certificates.crt
+      subPath: ca-certificates.crt
