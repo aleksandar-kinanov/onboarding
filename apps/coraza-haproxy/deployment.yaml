@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coraza-haproxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coraza-haproxy
+  template:
+    metadata:
+      labels:
+        app: coraza-haproxy
+    spec:
+      containers:
+        - name: haproxy
+          image: haproxy:2.9-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - name: haproxy-cfg
+              mountPath: /usr/local/etc/haproxy
+        - name: coraza-spoa
+          image: ghcr.io/corazawaf/coraza-spoa:0.7.3
+          args:
+            - -config
+            - /etc/coraza-spoa/coraza-spoa.yaml
+            - -autoreload
+          ports:
+            - name: spoa
+              containerPort: 9000
+          volumeMounts:
+            - name: coraza-spoa-cfg
+              mountPath: /etc/coraza-spoa
+        - name: httpbin
+          image: mccutchen/go-httpbin:2.25.0
+          args:
+            - /bin/go-httpbin
+            - -port
+            - "8081"
+          ports:
+            - name: httpbin
+              containerPort: 8081
+      volumes:
+        - name: haproxy-cfg
+          configMap:
+            name: haproxy-cfg
+        - name: coraza-spoa-cfg
+          configMap:
+            name: coraza-spoa-cfg
