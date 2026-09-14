@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Brings up or tears down the entire local onboarding sandbox:
-#   up   - kind cluster -> ArgoCD (with the Zscaler CA trust) -> GitHub repo
-#          connection -> root Application (which takes over from here).
-#   down - deletes the kind cluster (everything in it goes with it).
+#   up        - kind cluster -> ArgoCD (with the Zscaler CA trust) -> GitHub
+#               repo connection -> root Application (which takes over from
+#               here), then prints every app's endpoint/port-forward command.
+#   down      - deletes the kind cluster (everything in it goes with it).
+#   endpoints - reprints the endpoint/port-forward list any time, without
+#               re-running the rest of `up`.
 #
 # After `up`, ArgoCD owns the rest: the root Application manages
 # argocd/applicationset.yaml, which in turn creates one Application per
@@ -18,7 +21,7 @@ PYTHON_KAFKA_TEST_DIR="${PYTHON_KAFKA_TEST_DIR:-$HOME/projects/python-kafka-test
 PYTHON_KAFKA_TEST_IMAGE="ghcr.io/aleksandar-kinanov/onboarding/python-kafka-test:latest"
 
 usage() {
-  echo "Usage: $0 {up|down}" >&2
+  echo "Usage: $0 {up|down|endpoints}" >&2
   exit 1
 }
 
@@ -94,12 +97,50 @@ up() {
   kubectl apply -f "$SCRIPT_DIR/argocd/root-application.yaml"
 
   echo
-  echo "==> Done. ArgoCD admin password:"
-  kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
-    -o jsonpath='{.data.password}' | base64 -d
+  echo "==> Done. The apps below will keep coming up in the background as"
+  echo "    ArgoCD finishes syncing them (Keycloak/Kafka can take a minute or two)."
   echo
-  echo "Port-forward the UI with:"
-  echo "  kubectl -n $ARGOCD_NAMESPACE port-forward svc/argocd-server 8443:443"
+  endpoints
+}
+
+# Every app here is ClusterIP-only (no ingress controller in this sandbox),
+# so the only way in is `kubectl port-forward`. Safe to run any time, even
+# before every app has finished syncing - it just prints what to run once
+# each one is up.
+endpoints() {
+  local argocd_pw
+  argocd_pw="$(kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
+    -o jsonpath='{.data.password}' 2>/dev/null | base64 -d)"
+
+  cat <<EOF
+==> Endpoints (run each port-forward in its own terminal)
+
+ArgoCD UI
+  kubectl -n argocd port-forward svc/argocd-server 8443:443
+  https://localhost:8443  user: admin  password: ${argocd_pw:-<not found - is ArgoCD installed?>}
+
+Keycloak admin console
+  kubectl -n keycloak port-forward svc/keycloak-keycloakx-http 8080:80
+  http://localhost:8080  user: admin  password: admin
+
+Grafana (dashboards over Loki logs)
+  kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80
+  http://localhost:3000  user: admin  password: admin
+
+nginx demo
+  kubectl -n nginx port-forward svc/nginx 8081:80
+  http://localhost:8081
+
+coraza-haproxy WAF demo
+  kubectl -n coraza-haproxy port-forward svc/coraza-haproxy 8082:80
+  http://localhost:8082
+
+Kafka bootstrap (for an external client; python-kafka-test itself runs
+in-cluster and needs none of this)
+  kubectl -n strimzi port-forward svc/my-cluster-kafka-bootstrap 9092:9092
+  localhost:9092, SASL_PLAINTEXT, SCRAM-SHA-512
+  (get a KafkaUser's password: kubectl -n strimzi get secret <user-name> -o jsonpath='{.data.password}' | base64 -d)
+EOF
 }
 
 down() {
@@ -110,5 +151,6 @@ down() {
 case "${1:-}" in
   up) up ;;
   down) down ;;
+  endpoints) endpoints ;;
   *) usage ;;
 esac
