@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-coraza-haproxy
+  labels:
+    # Watched by Grafana's dashboard sidecar (grafana.sidecar.dashboards
+    # in values.yaml) - dropping a JSON dashboard in here is enough,
+    # no manual import through the UI needed.
+    grafana_dashboard: "1"
+data:
+  coraza-haproxy.json: |
+    {
+      "title": "Coraza / HAProxy",
+      "uid": "coraza-haproxy",
+      "tags": ["coraza", "haproxy", "loki"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "editable": true,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "annotations": { "list": [] },
+      "templating": { "list": [] },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "HTTP requests by status code",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "sum by (status_code) (count_over_time({namespace=\"coraza-haproxy\"} | status_code != \"\" [$__interval]))",
+              "legendFormat": "{{ "{{status_code}}" }}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Error rate (4xx/5xx incl. WAF denies)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "sum(rate({namespace=\"coraza-haproxy\"} | status_code=~\"4..|5..\" [$__interval]))",
+              "legendFormat": "errors/s"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Requests by method",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "sum by (method) (count_over_time({namespace=\"coraza-haproxy\"} | method != \"\" [$__interval]))",
+              "legendFormat": "{{ "{{method}}" }}"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Average request duration (Tt, ms)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "avg_over_time({namespace=\"coraza-haproxy\"} | tt != \"\" | unwrap tt [$__interval])",
+              "legendFormat": "avg Tt"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "logs",
+          "title": "Raw haproxy logs",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "options": { "showTime": true, "wrapLogMessage": true },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "{namespace=\"coraza-haproxy\"}"
+            }
+          ]
+        }
+      ]
+    }

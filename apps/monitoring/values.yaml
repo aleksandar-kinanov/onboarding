@@ -7,10 +7,18 @@ grafana:
       apiVersion: 1
       datasources:
         - name: Loki
+          uid: loki
           type: loki
           access: proxy
           url: http://monitoring-loki-gateway.monitoring.svc.cluster.local
           isDefault: true
+
+  # Dashboards are provisioned as ConfigMaps (see templates/) labeled
+  # grafana_dashboard: "1" - this sidecar watches this namespace for them
+  # and loads them into Grafana automatically, no manual UI import.
+  sidecar:
+    dashboards:
+      enabled: true
 
 loki:
   loki:
