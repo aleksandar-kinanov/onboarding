@@ -160,11 +160,9 @@ coraza-haproxy WAF demo
   kubectl -n coraza-haproxy port-forward svc/coraza-haproxy 8082:80
   http://localhost:8082
 
-Kafka bootstrap (for an external client; python-kafka-test itself runs
-in-cluster and needs none of this)
-  kubectl -n strimzi port-forward svc/my-cluster-kafka-bootstrap 9092:9092
-  localhost:9092, SASL_PLAINTEXT, SCRAM-SHA-512
-  (get a KafkaUser's password: kubectl -n strimzi get secret <user-name> -o jsonpath='{.data.password}' | base64 -d)
+python-kafka-test (runs in-cluster, producing/consuming on a loop - no
+port-forward needed, just tail its logs)
+  kubectl -n strimzi logs -f deployment/python-kafka-test
 EOF
 }
 
