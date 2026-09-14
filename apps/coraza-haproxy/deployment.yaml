@@ -17,7 +17,7 @@ spec:
           image: haproxy:2.9-alpine
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8081
           volumeMounts:
             - name: haproxy-cfg
               mountPath: /usr/local/etc/haproxy
@@ -36,14 +36,10 @@ spec:
             - name: coraza-spoa-cfg
               mountPath: /etc/coraza-spoa
         - name: httpbin
-          image: mccutchen/go-httpbin:2.25.0
-          args:
-            - /bin/go-httpbin
-            - -port
-            - "8081"
+          image: kennethreitz/httpbin:latest
           ports:
             - name: httpbin
-              containerPort: 8081
+              containerPort: 80
       volumes:
         - name: haproxy-cfg
           configMap:
