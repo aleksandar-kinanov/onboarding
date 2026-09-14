@@ -2,6 +2,8 @@ apiVersion: user.keycloak.crossplane.io/v1alpha1
 kind: User
 metadata:
   name: onboarding-bob
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     realmIdRef:
@@ -25,6 +27,8 @@ apiVersion: user.keycloak.crossplane.io/v1alpha1
 kind: Roles
 metadata:
   name: onboarding-bob-roles
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     realmIdRef:

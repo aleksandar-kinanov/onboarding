@@ -2,6 +2,8 @@ apiVersion: role.keycloak.crossplane.io/v1alpha1
 kind: Role
 metadata:
   name: onboarding-app-user
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     name: app-user

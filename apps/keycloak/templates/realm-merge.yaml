@@ -2,10 +2,12 @@ apiVersion: realm.keycloak.crossplane.io/v1alpha1
 kind: Realm
 metadata:
   name: merge
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     realm: merge
-    enabled: true
+    enabled: true 
     displayName: "Realm to merge"
   providerConfigRef:
     name: keycloak-provider-config

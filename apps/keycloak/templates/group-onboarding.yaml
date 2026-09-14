@@ -2,6 +2,8 @@ apiVersion: group.keycloak.crossplane.io/v1alpha1
 kind: Group
 metadata:
   name: onboarding-groupadminpermissions-group
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     name: onboarding-managed-group
@@ -14,6 +16,8 @@ apiVersion: group.keycloak.crossplane.io/v1alpha1
 kind: Memberships
 metadata:
   name: basic-memberships
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   forProvider:
     groupIdRef:
