@@ -29,6 +29,38 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || { echo "Missing required command: $1" >&2; exit 1; }
 }
 
+# Blocks `up` here until ArgoCD is confirmed up, instead of trusting a single
+# rollout-status call: polls up to 15 times, 5s apart (75s max), and aborts
+# the whole run if it never comes up rather than pressing on regardless.
+wait_for_argocd() {
+  local max_retries=15
+  local delay=5
+  local attempt=1
+  while [[ "$attempt" -le "$max_retries" ]]; do
+    if kubectl -n "$ARGOCD_NAMESPACE" get deployment argocd-server \
+        -o jsonpath='{.status.readyReplicas}' 2>/dev/null | grep -qx '[1-9][0-9]*'; then
+      echo "==> ArgoCD is up and running"
+      return 0
+    fi
+    echo "  ArgoCD not ready yet (attempt $attempt/$max_retries), retrying in ${delay}s..."
+    sleep "$delay"
+    attempt=$((attempt + 1))
+  done
+  echo "ArgoCD did not become ready after $((max_retries * delay))s - aborting." >&2
+  exit 1
+}
+
+print_argocd_access() {
+  local argocd_pw
+  argocd_pw="$(kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
+    -o jsonpath='{.data.password}' 2>/dev/null | base64 -d)"
+  cat <<EOF
+ArgoCD UI
+  kubectl -n $ARGOCD_NAMESPACE port-forward svc/argocd-server 8443:443
+  https://localhost:8443  user: admin  password: ${argocd_pw:-<not found - is ArgoCD installed?>}
+EOF
+}
+
 up() {
   for cmd in kind kubectl helm docker yq; do require_cmd "$cmd"; done
 
@@ -69,8 +101,11 @@ up() {
     -f "$SCRIPT_DIR/argocd/values-tls-certs.yaml" \
     --wait --timeout 5m
 
-  echo "==> Waiting for ArgoCD server to be ready"
-  kubectl -n "$ARGOCD_NAMESPACE" rollout status deploy/argocd-server --timeout=180s
+  echo "==> Waiting for ArgoCD server to be ready (up to 15 retries, 5s apart)"
+  wait_for_argocd
+  echo
+  print_argocd_access
+  echo
 
   echo "==> Configuring the GitHub repo connection (SSH deploy key)"
   if [[ ! -f "$SSH_KEY_PATH" ]]; then
@@ -104,16 +139,10 @@ up() {
 # before every app has finished syncing - it just prints what to run once
 # each one is up.
 endpoints() {
-  local argocd_pw
-  argocd_pw="$(kubectl -n "$ARGOCD_NAMESPACE" get secret argocd-initial-admin-secret \
-    -o jsonpath='{.data.password}' 2>/dev/null | base64 -d)"
-
+  echo "==> Endpoints (run each port-forward in its own terminal)"
+  echo
+  print_argocd_access
   cat <<EOF
-==> Endpoints (run each port-forward in its own terminal)
-
-ArgoCD UI
-  kubectl -n argocd port-forward svc/argocd-server 8443:443
-  https://localhost:8443  user: admin  password: ${argocd_pw:-<not found - is ArgoCD installed?>}
 
 Keycloak admin console
   kubectl -n keycloak port-forward svc/keycloak-keycloakx-http 8080:80
