@@ -37,23 +37,41 @@ kubectl describe <kind> <name> -n keycloak   # check .status for the provider's 
 
 ## Kafka
 
-7. Add a second `KafkaTopic`/`KafkaUser` pair and point a copy of
+1. Add a second `KafkaTopic`/`KafkaUser` pair and point a copy of
    `python-kafka-test` at it via its `ConfigMap` (see how the existing app
    wires topic/username through `envFrom` + Kustomize `replacements`).
-8. Lock the new `KafkaUser`'s ACLs down to only its own topic, then confirm
+2. Lock the new `KafkaUser`'s ACLs down to only its own topic, then confirm
    a client using the *old* user can't read/write it.
 
-## WAF / observability
+## WAF
 
-9. Send a request through `coraza-haproxy` designed to trip a Coraza rule
-   (e.g. a SQLi-looking query string) and find the blocked request's log
-   line in Grafana via the Loki datasource.
-10. Add a new panel to the provisioned Grafana dashboard (edit the
-    ConfigMap in `apps/monitoring/`) that graphs blocked vs. allowed
-    request counts.
+1. Send a request through `coraza-haproxy` designed to trip a Coraza rule
+   (e.g. a SQLi-looking query string) and confirm it gets blocked.
+2. Loosen or tighten a Coraza rule (`apps/coraza-haproxy/`) and confirm the
+   same request's outcome flips.
+
+## Monitoring
+
+1. Find the blocked request from the WAF exercises above in Grafana via the
+   Loki datasource.
+2. Add a new panel to the provisioned Grafana dashboard (edit the ConfigMap
+   in `apps/monitoring/`) that graphs blocked vs. allowed request counts.
 
 ## Kustomize
 
-11. Add your own patch/`replacements` entry to `apps/nginx/` that changes
-    something observable in the response (e.g. a response header), so you
-    can see the Helm-inflation + Kustomize-patch layering in action.
+1. Add your own patch/`replacements` entry to `apps/nginx/` that changes
+   something observable in the response (e.g. a response header), so you
+   can see the Helm-inflation + Kustomize-patch layering in action.
+
+## ArgoCD
+
+1. **Deploy cert-manager** — add a new `apps/cert-manager/` app the same way
+   `apps/strimzi/` pulls in its operator: a `Chart.yaml` with a `dependencies:`
+   entry pointing at a new Helm repo (Jetstack's `https://charts.jetstack.io`,
+   chart `cert-manager`, with `installCRDs: true` in its values). Once
+   ArgoCD's ApplicationSet picks up the new folder and syncs it, review the
+   deployment — `kubectl -n cert-manager get pods` (controller, webhook,
+   cainjector should all be `Running`), confirm the CRDs landed
+   (`kubectl get crd | grep cert-manager.io`), and read through what the
+   chart actually created (`argocd app manifests cert-manager`) before
+   moving on.
