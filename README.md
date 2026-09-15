@@ -48,6 +48,9 @@ git push
 Then add your own SSH keypair as a read-only Deploy key on
 `<your-repo-name>` before running `./setup.sh up`.
 
+Once it's up, see [`PRACTICE.md`](./PRACTICE.md) for hands-on exercises
+against the running stack, not just setup.
+
 ## Prerequisites
 
 - `kind`, `kubectl`, `helm`, `docker`, `yq` on your PATH
