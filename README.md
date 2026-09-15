@@ -37,9 +37,16 @@ grep -rl 'aleksandar-kinanov/onboarding' --include="*.yaml" --include="*.sh" . \
 
 (drop the `''` after `-i` on Linux). This touches `setup.sh`,
 `argocd/root-application.yaml`, `argocd/applicationset.yaml`, and the
-`python-kafka-test` image name. Commit and push the result, then add your
-own SSH keypair as a read-only Deploy key on `<your-repo-name>` before
-running `./setup.sh up`.
+`python-kafka-test` image name. Commit and push the result:
+
+```bash
+git add -A
+git commit -m "Repoint at <your-repo-name>"
+git push
+```
+
+Then add your own SSH keypair as a read-only Deploy key on
+`<your-repo-name>` before running `./setup.sh up`.
 
 ## Prerequisites
 
