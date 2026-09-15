@@ -12,6 +12,35 @@ this repo (see "Apps" further down for the full detail on each):
 - nginx, exercising Kustomize's Helm chart inflation, patches,
   `replacements`, and a component together
 
+## Using your own copy on GitHub
+
+This repo is the source ArgoCD syncs from, hardcoded as
+`git@github.com:aleksandar-kinanov/onboarding.git` in a few places. If you
+don't have push access here (or this repo gets locked down), make your own
+copy on GitHub instead of forking:
+
+```bash
+gh repo create <you>/<your-repo-name> --private --confirm
+
+git clone git@github.com:aleksandar-kinanov/onboarding.git my-onboarding
+cd my-onboarding
+git remote set-url origin git@github.com:<you>/<your-repo-name>.git
+git push -u origin main
+```
+
+Then point every reference at your new repo instead of this one:
+
+```bash
+grep -rl 'aleksandar-kinanov/onboarding' --include="*.yaml" --include="*.sh" . \
+  | xargs sed -i '' 's#aleksandar-kinanov/onboarding#<you>/<your-repo-name>#g'
+```
+
+(drop the `''` after `-i` on Linux). This touches `setup.sh`,
+`argocd/root-application.yaml`, `argocd/applicationset.yaml`, and the
+`python-kafka-test` image name. Commit and push the result, then add your
+own SSH keypair as a read-only Deploy key on `<your-repo-name>` before
+running `./setup.sh up`.
+
 ## Prerequisites
 
 - `kind`, `kubectl`, `helm`, `docker`, `yq` on your PATH
