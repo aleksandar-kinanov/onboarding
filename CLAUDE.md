@@ -3,11 +3,12 @@
 ## Project overview
 
 Local onboarding/practice environment for a Principal DevOps role: a
-`kind`-based platform stack used to learn/demo GitOps-managed identity and
-event streaming. ArgoCD deploys everything else — Keycloak, Crossplane (+
-its Keycloak provider), Strimzi Kafka, and a small Python Kafka
-producer/consumer app — driven declaratively from this repo, not by hand
-via UIs/APIs.
+`kind`-based platform stack used to learn/demo GitOps-managed identity,
+event streaming, WAF-protected ingress, and observability. ArgoCD deploys
+everything else — Keycloak, Crossplane (+ its Keycloak provider), Strimzi
+Kafka, a small Python Kafka producer/consumer app, an HAProxy + Coraza WAF
+demo, a Grafana/Loki/Alloy logging stack, and an nginx Kustomize showcase
+— driven declaratively from this repo, not by hand via UIs/APIs.
 
 This is a learning sandbox, not a production repo — favor clarity and
 working examples over hardening. See `README.md` for setup/usage; this
@@ -19,11 +20,21 @@ file is oriented at how the repo is put together and how to work in it.
 - GitOps/delivery: ArgoCD, self-managing (see "How ArgoCD bootstraps
   itself" below)
 - Identity: Keycloak, configured via Crossplane + its Keycloak provider
-  (Realm/Client/User/Role/Group claims, plus a custom `KeycloakUser` XR)
+  (Realm/Client/User/Role/Group claims, plus a custom `KeycloakUser` XRD/
+  Composition)
 - Event streaming: Strimzi Kafka Operator (KRaft mode), with a demo
   `KafkaTopic`/`KafkaUser` and a small Python producer/consumer app
   (`apps/python-kafka-test/`) running in-cluster against it
 - Infra-as-code for K8s resources: Crossplane
+- WAF/ingress: HAProxy + the Coraza SPOA WAF filter, fronting an `httpbin`
+  backend (`apps/coraza-haproxy/`)
+- Observability: Grafana + Loki (`apps/monitoring/`) fed by Alloy
+  (`apps/alloy/`), shipping `coraza-haproxy`'s logs; a dashboard is
+  auto-provisioned into Grafana from a ConfigMap, no manual UI import
+- Kustomize showcase: `apps/nginx/`, exercising Helm chart inflation
+  (`helmCharts:`), a `configMapGenerator`, patches, `replacements`, and a
+  component together, as a deliberately fuller example than
+  `python-kafka-test`'s plain Kustomize build
 
 ## Milestones — all complete; extend rather than re-derive
 
@@ -43,6 +54,16 @@ file is oriented at how the repo is put together and how to work in it.
    own `KafkaTopic`/`KafkaUser`
 10. ✅ Make ArgoCD bootstrap itself (root Application) and script the whole
     bring-up/teardown (`setup.sh`)
+11. ✅ Deploy an HAProxy + Coraza SPOA WAF demo fronting an `httpbin`
+    backend
+12. ✅ Deploy Grafana + Loki, and Alloy to ship the WAF demo's logs into
+    Loki, with a dashboard auto-provisioned via ConfigMap
+13. ✅ Build an nginx app that exercises Kustomize more fully (Helm chart
+    inflation, `configMapGenerator`, patches, `replacements`, a component)
+    as a second Kustomize example alongside `python-kafka-test`
+14. ✅ Fold the Python app's source into this repo and document a
+    GitHub-specific path for running a delinked copy, so `git clone` +
+    `./setup.sh up` is the entire setup with no second checkout needed
 
 Possible next steps if continuing this sandbox: a Crossplane composition
 for Kafka topics/users (mirroring the `KeycloakUser` XR pattern), an
@@ -131,6 +152,10 @@ kubectl get managed   # all Crossplane managed resources across the Keycloak pro
 
 # Strimzi / Kafka
 kubectl get kafka,kafkatopic,kafkauser -n strimzi
+
+# WAF demo / observability
+kubectl -n coraza-haproxy logs -l app=coraza-haproxy
+kubectl -n monitoring port-forward svc/monitoring-grafana 3000:80
 ```
 
 ## Conventions / safety rules
