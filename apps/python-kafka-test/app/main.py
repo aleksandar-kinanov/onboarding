@@ -20,9 +20,9 @@ conf_base = {
 
 def acked(err, msg):
     if err is not None:
-        print('Failed to deliver message: {}'.format(err.str()))
+        print(f"Failed to deliver message: {err.str()}")
     else:
-        print('Produced to: {} [{}] @ {}'.format(msg.topic(), msg.partition(), msg.offset()))
+        print(f"Produced to: {msg.topic()} [{msg.partition()}] @ {msg.offset()}")
 
 
 producer = Producer(conf_base)
@@ -44,7 +44,7 @@ try:
         msg = consumer.poll(1.0)
         if msg is not None:
             if msg.error():
-                print("Error:", msg.error())
+                print(f"Error: {msg.error()}")
             else:
                 print(f"{msg.key()}: {msg.value()}")
 
